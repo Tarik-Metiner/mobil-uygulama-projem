@@ -37,6 +37,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Future<void> loadUser() async {
     final data = await supabaseService.getUser(1);
+
     setState(() {
       user = data;
       loading = false;
@@ -52,6 +53,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
   Future<void> toggleTheme(bool value) async {
     await prefsService.saveTheme(value);
     widget.onThemeChanged(value);
+
     setState(() {});
   }
 
@@ -71,20 +73,23 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   accountName: Text(name),
                   accountEmail: Text(email),
                   currentAccountPicture: CircleAvatar(
-                    backgroundImage:
-                        photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                    backgroundImage: photoUrl.isNotEmpty
+                        ? NetworkImage(photoUrl)
+                        : null,
                     child: photoUrl.isEmpty
                         ? const Icon(Icons.person)
                         : null,
                   ),
                 ),
 
-                
+                // 🔥 THEME SWITCH (DÜZELTİLMİŞ)
                 SwitchListTile(
                   title: const Text("Koyu Tema"),
                   secondary: const Icon(Icons.dark_mode),
                   value: widget.isDarkMode,
-                  onChanged: toggleTheme,
+                  onChanged: (value) {
+                    toggleTheme(value);
+                  },
                 ),
 
                 const Divider(),

@@ -20,10 +20,11 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class _CustomDrawerState extends State<CustomDrawer> {
+  final SQLiteService sqliteService = SQLiteService();
   final SupabaseService supabaseService = SupabaseService();
   final SharedPreferencesService prefsService = SharedPreferencesService();
 
-  Map<String, dynamic>? user;
+  Map<String, dynamic>? cloudUser;
   bool loading = true;
 
   final String baseUrl =
@@ -36,12 +37,22 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Future<void> loadUser() async {
-    final data = await supabaseService.getUser(1);
+    try {
+      final supabaseData = await supabaseService.getUser(1);
 
-    setState(() {
-      user = data;
-      loading = false;
-    });
+      if (!mounted) return;
+
+      setState(() {
+        cloudUser = supabaseData;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   String getPhotoUrl(String value) {
@@ -59,9 +70,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    final name = user?["adsoyad"] ?? "Kullanıcı";
-    final email = user?["email"] ?? "";
-    final photoRaw = (user?["fotograf"] ?? "").toString();
+    const name = "Muhammed Tarik Metiner";
+    const email = "030123054@std.izu.edu.tr";
+
+    final photoRaw = (cloudUser?["fotograf"] ?? "").toString();
     final photoUrl = getPhotoUrl(photoRaw);
 
     return Drawer(
@@ -70,8 +82,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
           : ListView(
               children: [
                 UserAccountsDrawerHeader(
-                  accountName: Text(name),
-                  accountEmail: Text(email),
+                  accountName: const Text(name),
+                  accountEmail: const Text(email),
                   currentAccountPicture: CircleAvatar(
                     backgroundImage: photoUrl.isNotEmpty
                         ? NetworkImage(photoUrl)
@@ -82,14 +94,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ),
                 ),
 
-                // 🔥 THEME SWITCH (DÜZELTİLMİŞ)
                 SwitchListTile(
                   title: const Text("Koyu Tema"),
                   secondary: const Icon(Icons.dark_mode),
                   value: widget.isDarkMode,
-                  onChanged: (value) {
-                    toggleTheme(value);
-                  },
+                  onChanged: toggleTheme,
                 ),
 
                 const Divider(),

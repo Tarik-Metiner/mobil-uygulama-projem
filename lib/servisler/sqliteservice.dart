@@ -11,7 +11,7 @@ class SQLiteService {
     _database = await databaseFactoryFfi.openDatabase(
       'kullanici.db',
       options: OpenDatabaseOptions(
-        version: 4,
+        version: 6,
         onCreate: _onCreate,
         onOpen: _onOpen,
       ),
@@ -20,8 +20,7 @@ class SQLiteService {
     return _database!;
   }
 
-  
-  Future<void> _onCreate(Database db, int version) async {
+  Future _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE kullanicilar(
         id INTEGER PRIMARY KEY,
@@ -32,13 +31,12 @@ class SQLiteService {
 
     await db.insert("kullanicilar", {
       "id": 1,
-      "adsoyad": "Muhammed Tarik Metiner",
-      "email": "030123054@std.izu.edu.tr",
+      "adsoyad": "Varsayılan Kullanıcı",
+      "email": "test@mail.com",
     });
   }
 
-  
-  Future<void> _onOpen(Database db) async {
+  Future _onOpen(Database db) async {
     final result = await db.query(
       "kullanicilar",
       where: "id = ?",
@@ -48,14 +46,13 @@ class SQLiteService {
     if (result.isEmpty) {
       await db.insert("kullanicilar", {
         "id": 1,
-        "adsoyad": "Muhammed Tarik Metiner",
-        "email": "030123054@std.izu.edu.tr",
+        "adsoyad": "Varsayılan Kullanıcı",
+        "email": "test@mail.com",
       });
     }
   }
 
-  
-  Future<Map<String, dynamic>?> getUser() async {
+  Future<Map<String, dynamic>> getUser() async {
     final db = await database;
 
     final result = await db.query(
@@ -64,24 +61,11 @@ class SQLiteService {
       whereArgs: [1],
     );
 
-    return result.isNotEmpty ? result.first : null;
-  }
+    if (result.isNotEmpty) return result.first;
 
-  
-  Future<void> updateUser({
-    required String adSoyad,
-    required String email,
-  }) async {
-    final db = await database;
-
-    await db.update(
-      "kullanicilar",
-      {
-        "adsoyad": adSoyad,
-        "email": email,
-      },
-      where: "id = ?",
-      whereArgs: [1],
-    );
+    return {
+      "adsoyad": "Kullanıcı",
+      "email": "",
+    };
   }
 }

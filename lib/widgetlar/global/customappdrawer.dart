@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../servisler/sqliteservice.dart';
-import '../../servisler/supabaseservice.dart';
-import '../../servisler/sharedpreferencesservice.dart';
 
 class CustomDrawer extends StatefulWidget {
-  final Function(bool) onThemeChanged;
   final Function(int) onNavigate;
+  final Function(bool) onThemeChanged;
   final bool isDarkMode;
 
   const CustomDrawer({
     super.key,
-    required this.onThemeChanged,
     required this.onNavigate,
+    required this.onThemeChanged,
     required this.isDarkMode,
   });
 
@@ -21,14 +19,9 @@ class CustomDrawer extends StatefulWidget {
 
 class _CustomDrawerState extends State<CustomDrawer> {
   final SQLiteService sqliteService = SQLiteService();
-  final SupabaseService supabaseService = SupabaseService();
-  final SharedPreferencesService prefsService = SharedPreferencesService();
 
-  Map<String, dynamic>? cloudUser;
+  Map<String, dynamic>? user;
   bool loading = true;
-
-  final String baseUrl =
-      "https://sbnrqkgntlsyiknmsgds.supabase.co/storage/v1/object/public/resimler/";
 
   @override
   void initState() {
@@ -36,45 +29,27 @@ class _CustomDrawerState extends State<CustomDrawer> {
     loadUser();
   }
 
-  Future<void> loadUser() async {
-    try {
-      final supabaseData = await supabaseService.getUser(1);
+  Future loadUser() async {
+    final data = await sqliteService.getUser();
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        cloudUser = supabaseData;
-        loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        loading = false;
-      });
-    }
+    setState(() {
+      user = data;
+      loading = false;
+    });
   }
 
-  String getPhotoUrl(String value) {
-    if (value.isEmpty) return "";
-    if (value.startsWith("http")) return value;
-    return baseUrl + value;
-  }
-
-  Future<void> toggleTheme(bool value) async {
-    await prefsService.saveTheme(value);
+  void toggleTheme(bool value) {
     widget.onThemeChanged(value);
-
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    const name = "Muhammed Tarik Metiner";
-    const email = "030123054@std.izu.edu.tr";
-
-    final photoRaw = (cloudUser?["fotograf"] ?? "").toString();
-    final photoUrl = getPhotoUrl(photoRaw);
+    final name = user?["adsoyad"]?.toString() ?? "Kullanici";
+    final email = user?["email"]?.toString() ?? "";
+    final photo = user?["fotograf"]?.toString() ?? "";
 
     return Drawer(
       child: loading
@@ -82,15 +57,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
           : ListView(
               children: [
                 UserAccountsDrawerHeader(
-                  accountName: const Text(name),
-                  accountEmail: const Text(email),
+                  accountName: Text(name),
+                  accountEmail: Text(email),
                   currentAccountPicture: CircleAvatar(
-                    backgroundImage: photoUrl.isNotEmpty
-                        ? NetworkImage(photoUrl)
-                        : null,
-                    child: photoUrl.isEmpty
-                        ? const Icon(Icons.person)
-                        : null,
+                    backgroundImage:
+                        photo.isNotEmpty ? NetworkImage(photo) : null,
+                    child:
+                        photo.isEmpty ? const Icon(Icons.person) : null,
                   ),
                 ),
 
